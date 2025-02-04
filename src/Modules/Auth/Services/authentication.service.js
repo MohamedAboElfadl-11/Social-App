@@ -3,6 +3,7 @@ import { emitter } from "../../../Services/sending-email.service.js";
 import * as secure from "../../../Utils/crypto.js";
 import emailTemplate from "../../../Utils/email-temp.js";
 import jwt from "jsonwebtoken"
+import { v4 as uuidv4 } from "uuid";
 
 // Signup service
 export const signupService = async (req, res, next) => {
@@ -80,4 +81,28 @@ export const verifyEmail = async (req, res, next) => {
         }
     });
     res.status(200).json({ message: "email verified successfully" });
+}
+
+// login service
+export const loginService = async (req, res, next) => {
+    const { email, password } = req.body;
+    // find email in database
+    const user = await UserModel.findOne({ email });
+    if (!user) return res.status(401).json({ message: "invalied email or password" })
+    const userPassword = await secure.comparing(password, user.password)
+    if (!userPassword) return res.status(401).json({ message: "invalied email or password" })
+    // generate access token for user _id and email
+    const accesstoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
+    // generate refresh token from access token
+    const refreshtoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '7d', jwtid: uuidv4() })
+    res.status(200).json({ message: "Login successfully", accesstoken, refreshtoken });
+}
+
+// refresh token services 
+export const refreshTokenService = async (req, res, next) => {
+    const { refreshtoken } = req.headers;
+    const decodedData = jwt.verify(refreshtoken, process.env.JWT_REFRESH_TOKEN)
+    // generate access token from refresh token data
+    const accesstoken = jwt.sign({ _id: decodedData._id, email: decodedData.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
+    res.status(200).json({ message: "Token refershed successfully", accesstoken });
 }
