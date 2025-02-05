@@ -1,3 +1,4 @@
+import BlackListTokensModel from "../../../DB/Models/black-listed-tokens.js";
 import UserModel from "../../../DB/Models/user.model.js"
 import { emitter } from "../../../Services/sending-email.service.js";
 import * as secure from "../../../Utils/crypto.js";
@@ -105,4 +106,13 @@ export const refreshTokenService = async (req, res, next) => {
     // generate access token from refresh token data
     const accesstoken = jwt.sign({ _id: decodedData._id, email: decodedData.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
     res.status(200).json({ message: "Token refershed successfully", accesstoken });
+}
+
+// Logout service
+export const logoutService = async (req, res, next) => {
+    const { tokenId, expiryDate } = req.authUser.token;
+    const isTokenBlacklisted = await BlackListTokensModel.findOne({ tokenId });
+    if (isTokenBlacklisted) { return res.status(400).json({ message: "Token already blacklisted" }) }
+    await BlackListTokensModel.create({ tokenId, expiryDate });
+    res.status(200).json({ message: "User logged out successfully" });
 }
