@@ -10,7 +10,7 @@ config();
 const boostrap = function () {
     const app = express()
     app.use(express.json())
-    controllerHandler(app)
+    controllerHandler(app, express)
     const PORT = process.env.PORT
     database_connection()
     app.listen(PORT, () => {

@@ -15,3 +15,8 @@ export const providers = {
     FACEBOOK: 'facebook',
     SYSTEM: 'system'
 }
+
+// allow extentions
+export const ImageExtentions = ['image/jpg', 'image/jpeg', 'image/png']
+export const VideoExtentions = ['video/mp4', 'video/avi', 'video/mov']
+export const DocumentExtentions = ['application/pdf', 'application/json', 'application/javascript']
