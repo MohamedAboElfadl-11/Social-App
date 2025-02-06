@@ -78,3 +78,41 @@ export const verifyEmailValidation = {
             }),
     })
 }
+
+export const forgetPasswordValidation = {
+    body: Joi.object({
+        email: Joi.string().email().required()
+            .messages({
+                "string.empty": "Email is required",
+                "string.email": "Invalid email format"
+            }),
+    })
+}
+
+export const resetPasswordValidation = {
+    body: Joi.object({
+        email: Joi.string().email().required()
+            .messages({
+                "string.empty": "Email is required",
+                "string.email": "Invalid email format"
+            }),
+        otp: Joi.string().length(6).pattern(/^\d+$/).required()
+            .messages({
+                "string.empty": "OTP is required",
+                "string.length": "OTP must be exactly 6 digits",
+                "string.pattern.base": "OTP must contain only numbers"
+            }),
+        password: Joi.string().min(8).max(30).required().pattern(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*])[A-Za-z\d@$!%*]{8,}$/
+        ).messages({
+            "string.empty": "Password is required",
+            "string.min": "Password must be at least 8 characters",
+            "string.max": "Password must be at most 30 characters"
+        }),
+        confirmPassword: Joi.string().valid(Joi.ref('password')).required()
+            .messages({
+                "any.only": "Passwords do not match",
+                "string.empty": "Confirm password is required"
+            }),
+    })
+}

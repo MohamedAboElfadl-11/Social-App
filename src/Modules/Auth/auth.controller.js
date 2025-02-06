@@ -23,5 +23,14 @@ authRouters.get("/logout",
     errorHandlerMiddleware(authenticationMiddleware()),
     errorHandlerMiddleware(authService.logoutService),
 )
+authRouters.patch("/forget-password",
+    validationMiddleware(validation.forgetPasswordValidation),
+    errorHandlerMiddleware(authService.forgetPasswordService)
+)
+
+authRouters.patch("/reset-password",
+    validationMiddleware(validation.resetPasswordValidation),
+    errorHandlerMiddleware(authService.resetPasswordService)
+)
 
 export default authRouters

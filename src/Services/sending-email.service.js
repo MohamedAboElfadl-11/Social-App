@@ -19,6 +19,7 @@ export const sendEmailService = async ({ to, subject, html, attachments = [] }) 
     });
     return info;
 };
+
 export const emitter = new EventEmitter();
 emitter.on("sendEmail", (...args) => {
     const { to, subject, html, attachments } = args[0];
@@ -29,3 +30,4 @@ emitter.on("sendEmail", (...args) => {
         attachments,
     });
 });
+

@@ -5,22 +5,16 @@ import * as secure from "../../../Utils/crypto.js";
 import emailTemplate from "../../../Utils/email-temp.js";
 import jwt from "jsonwebtoken"
 import { v4 as uuidv4 } from "uuid";
+import forgetPassEmailTemp from "../../../Utils/forget-pass-email-temp.js";
 
 // Signup service
 export const signupService = async (req, res, next) => {
 
     const { username, phone, fullName, email, password, confirmPassword, gender, age, location, bio, privateAccount } = req.body
 
-    // combare password and confirmed password 
-    if (password !== confirmPassword) return res.status(400).json({ message: "Dosn't match" });
-
     // check email uniquness
     const isEmailExist = await UserModel.findOne({ email })
     if (isEmailExist) return res.status(404).json({ message: "email already exist" })
-
-    // check user name uniquness
-    const isUserNameExist = await UserModel.findOne({ username })
-    if (isUserNameExist) return res.status(404).json({ message: "user name already exist" })
 
     // encrypt phone number
     const encryptedPhone = secure.encryption(phone, process.env.SECRET_KEY);
@@ -35,6 +29,8 @@ export const signupService = async (req, res, next) => {
 
     // change profile state
     const isPublic = !privateAccount
+
+    // hashing OTp
     const hashedOtp = secure.hashing(otp, +process.env.SALT)
 
     // send verification email with OTP
@@ -102,6 +98,9 @@ export const loginService = async (req, res, next) => {
 // refresh token services 
 export const refreshTokenService = async (req, res, next) => {
     const { refreshtoken } = req.headers;
+    const decodedRefreshToken = jwt.verify(refreshtoken, process.env.JWT_REFRESH_TOKEN)
+    const isRefreshTokenBlacklisted = await BlackListTokensModel.findOne({ tokenId: decodedRefreshToken.jti });
+    if (isRefreshTokenBlacklisted) { return res.status(400).json({ message: "Token already blacklisted" }) }
     const decodedData = jwt.verify(refreshtoken, process.env.JWT_REFRESH_TOKEN)
     // generate access token from refresh token data
     const accesstoken = jwt.sign({ _id: decodedData._id, email: decodedData.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
@@ -111,8 +110,55 @@ export const refreshTokenService = async (req, res, next) => {
 // Logout service
 export const logoutService = async (req, res, next) => {
     const { tokenId, expiryDate } = req.authUser.token;
-    const isTokenBlacklisted = await BlackListTokensModel.findOne({ tokenId });
-    if (isTokenBlacklisted) { return res.status(400).json({ message: "Token already blacklisted" }) }
-    await BlackListTokensModel.create({ tokenId, expiryDate });
+    const { refreshtoken } = req.headers
+    const decodedRefreshToken = jwt.verify(refreshtoken, process.env.JWT_REFRESH_TOKEN)
+    const existingTokens = await BlackListTokensModel.find({
+        tokenId: { $in: [tokenId, decodedRefreshToken.jti] }
+    });
+    console.log(existingTokens)
+    if (existingTokens.length > 0) {
+        return res.status(400).json({ message: "Token already blacklisted" });
+    }
+    await BlackListTokensModel.insertMany([
+        { tokenId, expiryDate }, { tokenId: decodedRefreshToken.jti, expiryDate: decodedRefreshToken.exp }
+    ]);
     res.status(200).json({ message: "User logged out successfully" });
+}
+
+// forget password service
+export const forgetPasswordService = async (req, res, next) => {
+    const { email } = req.body
+    const user = await UserModel.findOne({ email })
+    if (!user) return res.status(404).json({ message: "user not found" })
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpiration = new Date()
+    otpExpiration.setMinutes(otpExpiration.getMinutes() + 10)
+    // send verification email with OTP
+    emitter.emit('sendEmail', {
+        subject: "Your OTP code",
+        to: email,
+        html: forgetPassEmailTemp(email, otp)
+    })
+    const hashedOtp = await secure.hashing(otp, +process.env.SALT)
+    user.forget_otp = hashedOtp
+    user.confirm_otp_exp_time = otpExpiration
+    await user.save()
+    res.status(202).json({ message: "OTP sented successfully, check yor email inbox" })
+}
+
+// reset password 
+export const resetPasswordService = async (req, res) => {
+    const { email, otp, password, confirmPassword } = req.body;
+    const user = await UserModel.findOne({ email })
+    if (!user)
+        return res.status(404).json({ message: "user not found" })
+    if (!user.confirm_otp_exp_time || new Date() > user.confirm_otp_exp_time)
+        return res.status(400).json({ message: "OTP has expired. Please request a new one." });
+    const isOtp = await secure.comparing(otp, user.forget_otp)
+    if (!isOtp)
+        return res.status(401).json({ message: "otp invalied" })
+    const hashedPassword = await secure.hashing(password, +process.env.SALT)
+    await UserModel.findByIdAndUpdate({ _id: user._id }, { password: hashedPassword, $unset: { forget_otp: "", confirm_otp_exp_time: "" } })
+    res.status(202).json({ message: "password updated successfully, please login with new password" })
 }
