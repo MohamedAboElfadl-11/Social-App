@@ -16,10 +16,6 @@ const userModelSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        age: {
-            type: Number,
-            required: true
-        },
         full_name: {
             type: String,
             required: true,
@@ -29,6 +25,10 @@ const userModelSchema = new mongoose.Schema(
             required: true,
             default: "N/A",
             enum: ['Male', 'Female', 'N/A']
+        },
+        DOB: {
+            type: Date,
+            required: true
         },
         location: {
             type: String,
@@ -56,6 +56,8 @@ const userModelSchema = new mongoose.Schema(
             default: providers.SYSTEM,
             enum: Object.values(providers)
         },
+        age: Number,
+
         phone: String,
 
         confirm_otp: String,

@@ -6,11 +6,12 @@ import emailTemplate from "../../../Utils/email-temp.js";
 import jwt from "jsonwebtoken"
 import { v4 as uuidv4 } from "uuid";
 import forgetPassEmailTemp from "../../../Utils/forget-pass-email-temp.js";
+import { DateTime } from "luxon"
 
 // Signup service
 export const signupService = async (req, res, next) => {
 
-    const { username, phone, fullName, email, password, confirmPassword, gender, age, location, bio, privateAccount } = req.body
+    const { username, phone, fullName, email, password, confirmPassword, gender, DOB, location, bio, privateAccount } = req.body
 
     // check email uniquness
     const isEmailExist = await UserModel.findOne({ email })
@@ -39,7 +40,9 @@ export const signupService = async (req, res, next) => {
         to: email,
         html: emailTemplate(username, otp)
     })
-
+    const birthDay = DateTime.fromISO(DOB);
+    const now = DateTime.now();
+    const age = Math.floor(now.diff(birthDay, "years").years);
     // create user account
     const user = new UserModel({
         username,
@@ -49,7 +52,7 @@ export const signupService = async (req, res, next) => {
         confirm_otp: hashedOtp,
         full_name: fullName,
         confirm_otp_exp_time: otpExpiration,
-        gender, age, location, bio, isPublic
+        gender, DOB, location, bio, isPublic, age
     })
     await user.save()
     res.status(201).json({ message: "Account created successfully" })

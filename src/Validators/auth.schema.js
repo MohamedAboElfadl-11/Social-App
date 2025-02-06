@@ -42,13 +42,8 @@ export const signupValidation = {
                 "string.empty": "Gender is required",
                 "any.only": "Gender must be 'Male', 'Female' or 'N/A'"
             }),
-        age: Joi.number().integer().min(13).max(100).required()
-            .messages({
-                "number.base": "Age must be a number",
-                "number.min": "You must be at least 13 years old",
-                "number.max": "Age cannot exceed 100 years",
-                "any.required": "Age is required"
-            }),
+        DOB: Joi.date().iso().max("now").min(new Date(new Date().setFullYear(new Date().getFullYear() - 100))).required(),
+
         location: Joi.string().min(3).max(100).required()
             .messages({
                 "string.empty": "Location is required",
