@@ -25,14 +25,13 @@ export const signupService = async (req, res, next) => {
 
     // generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    const otpExpiration = new Date()
-    otpExpiration.setMinutes(otpExpiration.getMinutes() + 10)
-
-    // change profile state
-    const isPublic = !privateAccount
+    const otpExpiration = DateTime.now().plus({ minutes: 10 }).toJSDate();
 
     // hashing OTp
     const hashedOtp = secure.hashing(otp, +process.env.SALT)
+
+    // change profile state
+    const isPublic = !privateAccount
 
     // send verification email with OTP
     emitter.emit('sendEmail', {
@@ -67,7 +66,7 @@ export const verifyEmail = async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "user not found" });
 
     // check if otp expired or not..!
-    if (!user.confirm_otp_exp_time || new Date() > user.confirm_otp_exp_time) return res.status(400).json({ message: "OTP has expired. Please request a new one." });
+    if (!user.confirm_otp_exp_time || DateTime.now() > user.confirm_otp_exp_time) return res.status(400).json({ message: "OTP has expired. Please request a new one." });
 
     // compare user OTP and inpot OTP
     const isOtp = await secure.comparing(otp.toString(), user.confirm_otp);
