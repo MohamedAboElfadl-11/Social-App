@@ -8,10 +8,7 @@ import { DateTime } from "luxon";
 // Get profile Data
 export const getProfileDataService = async (req, res) => {
     const user = req.authUser
-    const token = req.authUser.token;
-    const existingTokens = await BlackListTokensModel.findOne({ tokenId: token.tokenId });
-    if (existingTokens) return res.status(401).json({ message: "Token black listed please, Login again" });
-    const userPhone = await decryption(user.phone, process.env.SECRET_KEY)
+    const userPhone = decryption(user.phone, process.env.SECRET_KEY)
     const userData = {
         email: user.email,
         username: user.username,
@@ -28,9 +25,6 @@ export const getProfileDataService = async (req, res) => {
 // Update Profile Data [ username, email, phone, DOB, isPublic ] 
 export const updateProfileService = async (req, res) => {
     const user = req.authUser
-    const token = req.authUser.token;
-    const existingTokens = await BlackListTokensModel.findOne({ tokenId: token.tokenId });
-    if (existingTokens) return res.status(401).json({ message: "Token black listed please, Login again" });
     const { username, email, phone, DOB } = req.body;
     let updatedData = {}
     // update email and confirm it with OTP
@@ -53,10 +47,7 @@ export const updateProfileService = async (req, res) => {
         updatedData.email = email
         updatedData.isEmailVerified = false
     }
-    if (phone) {
-        const encryptedPhone = await encryption(phone, process.env.SECRET_KEY)
-        updatedData.phone = encryptedPhone
-    }
+    if (phone) updatedData.phone = encryption(phone, process.env.SECRET_KEY)
     if (username) updatedData.username = username
     if (DOB) {
         const birthDay = DateTime.fromISO(DOB);
@@ -66,6 +57,7 @@ export const updateProfileService = async (req, res) => {
         updatedData.DOB = DOB
     }
     console.log(updatedData)
-    await UserModel.findByIdAndUpdate({ _id: user._id }, updatedData, { new: true })
+    await UserModel.findByIdAndUpdate(user._id, updatedData, { new: true })
+    updatedData.phone = decryption(updatedData.phone, process.env.SECRET_KEY)
     res.status(201).json({ message: "Your Data updated successfully", updatedData })
 }
