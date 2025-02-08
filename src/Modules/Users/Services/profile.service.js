@@ -1,6 +1,6 @@
 import UserModel from "../../../DB/Models/user.model.js";
 import { emitter } from "../../../Services/sending-email.service.js";
-import { decryption, encryption, hashing } from "../../../Utils/crypto.js";
+import { comparing, decryption, encryption, hashing } from "../../../Utils/crypto.js";
 import emailTemplate from "../../../Utils/email-temp.js";
 import { DateTime } from "luxon";
 
@@ -59,4 +59,14 @@ export const updateProfileService = async (req, res) => {
     await UserModel.findByIdAndUpdate(user._id, updatedData, { new: true })
     updatedData.phone = decryption(updatedData.phone, process.env.SECRET_KEY)
     res.status(201).json({ message: "Your Data updated successfully", updatedData })
+}
+// update password service
+export const updatePasswordService = async (req, res) => {
+    const user = req.authUser;
+    const { oldPassword, password, confirmPassword } = req.body;
+    const isPasswordMatched = await comparing(oldPassword, user.password)
+    if (!isPasswordMatched) return res.status(409).json({ message: "wrong old password" })
+    const hashedPassword = hashing(password, +process.env.SALT)
+    await UserModel.findByIdAndUpdate(user._id, { password: hashedPassword })
+    res.status(200).json({ message: "password updated successfully" })
 }

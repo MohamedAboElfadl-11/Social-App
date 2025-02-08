@@ -4,9 +4,10 @@ import { errorHandlerMiddleware } from "../../Middlewares/error-handler.middlewa
 import { uploadProfilePic } from "./Services/upload-profile-pic.service.js";
 import { ImageExtentions } from "../../Constants/constatnts.js";
 import { authenticationMiddleware } from "../../Middlewares/authentication.middleware.js";
-import { getProfileDataService, updateProfileService } from "./Services/profile.service.js";
+import { getProfileDataService, updatePasswordService, updateProfileService } from "./Services/profile.service.js";
 import { validationMiddleware } from "../../Middlewares/validation.middleware.js";
 import { updateProfileValidation } from "../../Validators/user.schema.js";
+import { updatePasswordValidation } from "../../Validators/auth.schema.js";
 
 const userRouters = Router();
 
@@ -26,4 +27,9 @@ userRouters.patch("/update-data",
     errorHandlerMiddleware(updateProfileService)
 )
 
+userRouters.patch("/update-password",
+    validationMiddleware(updatePasswordValidation),
+    errorHandlerMiddleware(authenticationMiddleware()),
+    errorHandlerMiddleware(updatePasswordService)
+)
 export default userRouters

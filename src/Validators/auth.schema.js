@@ -111,3 +111,27 @@ export const resetPasswordValidation = {
             }),
     })
 }
+
+export const updatePasswordValidation = {
+    body: Joi.object({
+        oldPassword: Joi.string().min(8).max(30).required().pattern(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*])[A-Za-z\d@$!%*]{8,}$/
+        ).messages({
+            "string.empty": "Password is required",
+            "string.min": "Password must be at least 8 characters",
+            "string.max": "Password must be at most 30 characters"
+        }),
+        password: Joi.string().min(8).max(30).required().pattern(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*])[A-Za-z\d@$!%*]{8,}$/
+        ).messages({
+            "string.empty": "Password is required",
+            "string.min": "Password must be at least 8 characters",
+            "string.max": "Password must be at most 30 characters"
+        }),
+        confirmPassword: Joi.string().valid(Joi.ref('password')).required()
+            .messages({
+                "any.only": "Passwords do not match",
+                "string.empty": "Confirm password is required"
+            }),
+    })
+}
