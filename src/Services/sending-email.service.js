@@ -30,4 +30,3 @@ emitter.on("sendEmail", (...args) => {
         attachments,
     });
 });
-

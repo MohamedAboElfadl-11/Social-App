@@ -18,21 +18,21 @@ const userModelSchema = new mongoose.Schema(
         },
         full_name: {
             type: String,
-            required: true,
+            // required: true,
         },
         gender: {
             type: String,
-            required: true,
+            //  required: true,
             default: "N/A",
             enum: ['Male', 'Female', 'N/A']
         },
         DOB: {
             type: Date,
-            required: true
+            // required: true
         },
         location: {
             type: String,
-            required: true,
+            // required: true,
         },
         isEmailVerified: {
             type: Boolean,

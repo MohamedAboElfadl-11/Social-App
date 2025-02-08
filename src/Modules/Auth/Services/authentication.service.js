@@ -7,6 +7,8 @@ import jwt from "jsonwebtoken"
 import { v4 as uuidv4 } from "uuid";
 import forgetPassEmailTemp from "../../../Utils/forget-pass-email-temp.js";
 import { DateTime } from "luxon"
+import { OAuth2Client } from "google-auth-library";
+import { providers } from "../../../Constants/constatnts.js";
 
 // Signup service
 export const signupService = async (req, res, next) => {
@@ -163,4 +165,52 @@ export const resetPasswordService = async (req, res) => {
     const hashedPassword = await secure.hashing(password, +process.env.SALT)
     await UserModel.findByIdAndUpdate({ _id: user._id }, { password: hashedPassword, $unset: { forget_otp: "", confirm_otp_exp_time: "" } })
     res.status(202).json({ message: "password updated successfully, please login with new password" })
+}
+
+// Login with Gmail 
+export const loginGmailService = async (req, res) => {
+    const { idToken } = req.body;
+    const client = new OAuth2Client();
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.CLINTID,  // Specify the WEB_CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[WEB_CLIENT_ID_1, WEB_CLIENT_ID_2, WEB_CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+    // If the request specified a Google Workspace domain:
+    // const domain = payload['hd'];
+    const { email_verified, email } = payload
+    if (!email_verified) return res.status(400).json({ message: "invalid email credential" })
+    const user = await UserModel.findOne({ email, provider: providers.GOOGLE })
+    if (!user) return res.status(404).json({ message: "user not found" })
+    // generate access token for user _id and email
+    const accesstoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
+    // generate refresh token from access token
+    const refreshtoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '7d', jwtid: uuidv4() })
+    res.status(200).json({ message: "Login successfully", tokens: { accesstoken, refreshtoken } })
+}
+
+// Signup with Gmail
+export const signupGmailService = async (req, res) => {
+    const { idToken } = req.body;
+    const client = new OAuth2Client();
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.CLINTID,
+    });
+    const payload = ticket.getPayload();
+    const { email_verified, email, name } = payload
+    const isEmailExist = await UserModel.findOne({ email })
+    if (isEmailExist) return res.status(404).json({ message: "email already exist" })
+    if (!email_verified) return res.status(400).json({ message: "invalid email credential" })
+    const user = new UserModel({
+        username: name,
+        email,
+        provider: providers.GOOGLE,
+        isEmailVerified: true,
+        password: secure.hashing(uuidv4(), +process.env.SALT)
+    })
+    await user.save()
+    res.status(201).json({ message: "Account created successfully" })
 }

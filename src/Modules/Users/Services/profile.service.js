@@ -1,4 +1,3 @@
-import BlackListTokensModel from "../../../DB/Models/black-listed-tokens.js";
 import UserModel from "../../../DB/Models/user.model.js";
 import { emitter } from "../../../Services/sending-email.service.js";
 import { decryption, encryption, hashing } from "../../../Utils/crypto.js";
