@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { providers, systemRoles } from "../../Constants/constatnts.js";
+import { encryption, hashing } from "../../Utils/crypto.js";
 
 const userModelSchema = new mongoose.Schema(
     {
@@ -77,6 +78,14 @@ const userModelSchema = new mongoose.Schema(
 
     }
 )
+
+userModelSchema.pre('save', async function (next) {
+    if (this.isModified('password')) this.password = hashing(this.password, +process.env.SALT)
+    if (this.isModified('confirm_otp')) this.confirm_otp = hashing(this.confirm_otp, +process.env.SALT)
+    if (this.isModified('phone')) this.phone = encryption(this.phone, process.env.SECRET_KEY)
+    next()
+})
+
 
 const UserModel = mongoose.models.users || mongoose.model('users', userModelSchema)
 

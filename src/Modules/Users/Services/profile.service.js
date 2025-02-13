@@ -70,3 +70,9 @@ export const updatePasswordService = async (req, res) => {
     await UserModel.findByIdAndUpdate(user._id, { password: hashedPassword })
     res.status(200).json({ message: "password updated successfully" })
 }
+// Delete account service
+export const deleteAccountService = async (req, res) => {
+    const user = req.authUser;
+    await UserModel.findByIdAndDelete(user._id)
+    res.status(200).json({ message: 'Account deleted successfully' });
+}

@@ -20,17 +20,17 @@ export const signupService = async (req, res, next) => {
     if (isEmailExist) return res.status(404).json({ message: "email already exist" })
 
     // encrypt phone number
-    const encryptedPhone = secure.encryption(phone, process.env.SECRET_KEY);
+    // const encryptedPhone = secure.encryption(phone, process.env.SECRET_KEY);
 
     // hashing password
-    const hashedPassword = secure.hashing(password, +process.env.SALT);
+    // const hashedPassword = secure.hashing(password, +process.env.SALT);
 
     // generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
     const otpExpiration = DateTime.now().plus({ minutes: 10 }).toJSDate();
 
     // hashing OTp
-    const hashedOtp = secure.hashing(otp, +process.env.SALT)
+    // const hashedOtp = secure.hashing(otp, +process.env.SALT)
 
     // change profile state
     const isPublic = !privateAccount
@@ -48,9 +48,9 @@ export const signupService = async (req, res, next) => {
     const user = new UserModel({
         username,
         email,
-        password: hashedPassword,
-        phone: encryptedPhone,
-        confirm_otp: hashedOtp,
+        password,
+        phone,
+        confirm_otp: otp,
         full_name: fullName,
         confirm_otp_exp_time: otpExpiration,
         gender, DOB, location, bio, isPublic, age
@@ -119,7 +119,6 @@ export const logoutService = async (req, res, next) => {
     const existingTokens = await BlackListTokensModel.find({
         tokenId: { $in: [tokenId, decodedRefreshToken.jti] }
     });
-    console.log(existingTokens)
     if (existingTokens.length > 0) {
         return res.status(400).json({ message: "Token already blacklisted" });
     }
