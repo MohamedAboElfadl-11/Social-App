@@ -6,7 +6,7 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     description: String,
-    ownerId: {
+    ownerId: { // dah el mafrood hayb3ato el front-end 
         type: mongoose.Schema.Types.ObjectId,
         ref: "users",
         required: true
@@ -21,4 +21,6 @@ const postSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-export const PostModel = mongoose.models.Post || mongoose.model('posts', postSchema)
+const PostModel = mongoose.models.Post || mongoose.model('posts', postSchema)
+
+export default PostModel
