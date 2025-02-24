@@ -93,7 +93,7 @@ export const loginService = async (req, res, next) => {
     const userPassword = await secure.comparing(password, user.password)
     if (!userPassword) return res.status(401).json({ message: "invalied email or password" })
     // generate access token for user _id and email
-    const accesstoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '30m', jwtid: uuidv4() })
+    const accesstoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_ACCESS_TOKEN, { expiresIn: '1h', jwtid: uuidv4() })
     // generate refresh token from access token
     const refreshtoken = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_REFRESH_TOKEN, { expiresIn: '7d', jwtid: uuidv4() })
     res.status(200).json({ message: "Login successfully", accesstoken, refreshtoken });

@@ -5,10 +5,10 @@ const commentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    mentaions: {
+    tags: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
-    },
+    }],
     ownerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
@@ -25,4 +25,6 @@ const commentSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-export const CommentModel = mongoose.models.comments || mongoose.model('comments', commentSchema)
+const CommentModel = mongoose.models.comments || mongoose.model('comments', commentSchema)
+
+export default CommentModel
