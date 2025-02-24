@@ -22,4 +22,6 @@ const reactSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-export const ReactsModel = mongoose.Schema.reacts || mongoose.model('reacts', reactSchema);
+const ReactsModel = mongoose.Schema.reacts || mongoose.model('reacts', reactSchema);
+
+export default ReactsModel
