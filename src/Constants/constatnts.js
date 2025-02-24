@@ -20,3 +20,14 @@ export const providers = {
 export const ImageExtentions = ['image/jpg', 'image/jpeg', 'image/png']
 export const VideoExtentions = ['video/mp4', 'video/avi', 'video/mov']
 export const DocumentExtentions = ['application/pdf', 'application/json', 'application/javascript']
+
+// reacts type
+
+export const ReactsType = {
+    LIKE: 'Like',
+    LOVE: 'Love',
+    HAHA: "Haha",
+    ANGRY: "Angry",
+    SAD: 'Sad',
+    WOW: 'Wow'
+}

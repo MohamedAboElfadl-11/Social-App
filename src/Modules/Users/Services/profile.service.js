@@ -20,7 +20,6 @@ export const getProfileDataService = async (req, res) => {
     }
     res.status(202).json({ userData })
 }
-
 // Update Profile Data [ username, email, phone, DOB, isPublic ] 
 export const updateProfileService = async (req, res) => {
     const user = req.authUser
@@ -76,3 +75,4 @@ export const deleteAccountService = async (req, res) => {
     await UserModel.findByIdAndDelete(user._id)
     res.status(200).json({ message: 'Account deleted successfully' });
 }
+// 
